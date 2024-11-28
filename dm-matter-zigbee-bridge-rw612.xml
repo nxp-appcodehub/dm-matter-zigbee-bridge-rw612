@@ -1,0 +1,25 @@
+<data:item xmlns:data="data" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="data ../../xsd/alp.xsd" type="demo" format="projectfile" versionSchema="1.0.0" name="matter zigbee bridge rw612" uuid="1ba98af9-8f7a-4bb0-b262-e5939eaaba5b">
+    <display_title>
+        matter zigbee bridge rw612
+    </display_title>
+    <overview>
+        <![CDATA[This demo provide user how to integrate non-matter device as zigbee nodes to Matter enviroment]]>
+    </overview>
+    <toolchains>
+        <toolchain name="gcc"></toolchain>
+    </toolchains>
+    <families>
+        <family name="rw61x"></family>
+    </families>
+    <nxp_compatible_hw>
+        <hw id="RD-RW612-BGA"></hw>
+    </nxp_compatible_hw>
+    <peripherals>
+        <peripheral name="uart"></peripheral>
+    </peripherals>
+    <categories>
+        <category name="wireless_connectivity"></category>
+        <category name="bridge"></category>
+        <category name="rtos"></category>
+    </categories>
+</data:item>
