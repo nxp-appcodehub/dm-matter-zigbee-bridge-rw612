@@ -1,0 +1,274 @@
+diff --git a/src/app/BUILD.gn b/src/app/BUILD.gn
+index 98e7225549..ea200da161 100644
+--- a/src/app/BUILD.gn
++++ b/src/app/BUILD.gn
+@@ -76,6 +76,7 @@ buildconfig_header("app_buildconfig") {
+     "CHIP_DEVICE_CONFIG_DYNAMIC_SERVER=${chip_build_controller_dynamic_server}",
+     "CHIP_CONFIG_ENABLE_BUSY_HANDLING_FOR_OPERATIONAL_SESSION_SETUP=${chip_enable_busy_handling_for_operational_session_setup}",
+     "CHIP_CONFIG_DATA_MODEL_CHECK_DIE_ON_FAILURE=${chip_data_model_check_die_on_failure}",
++    "ZB_BRIDGE=1",
+   ]
+ 
+   if (chip_use_data_model_interface == "disabled") {
+diff --git a/src/app/CommandHandlerImpl.cpp b/src/app/CommandHandlerImpl.cpp
+index 366199a3b9..e2aa27bc6e 100644
+--- a/src/app/CommandHandlerImpl.cpp
++++ b/src/app/CommandHandlerImpl.cpp
+@@ -455,7 +455,11 @@ Status CommandHandlerImpl::ProcessCommandDataIB(CommandDataIB::Parser & aCommand
+     {
+         ChipLogDetail(DataManagement, "Received command for Endpoint=%u Cluster=" ChipLogFormatMEI " Command=" ChipLogFormatMEI,
+                       concretePath.mEndpointId, ChipLogValueMEI(concretePath.mClusterId), ChipLogValueMEI(concretePath.mCommandId));
++#if ZB_BRIDGE  //additional argument "commandDataReader" added
++        SuccessOrExit(err = DataModelCallbacks::GetInstance()->PreCommandReceived(concretePath, GetSubjectDescriptor(),commandDataReader));
++#else
+         SuccessOrExit(err = DataModelCallbacks::GetInstance()->PreCommandReceived(concretePath, GetSubjectDescriptor()));
++#endif
+         mpCallback->DispatchCommand(*this, concretePath, commandDataReader);
+         DataModelCallbacks::GetInstance()->PostCommandReceived(concretePath, GetSubjectDescriptor());
+     }
+@@ -566,7 +570,11 @@ Status CommandHandlerImpl::ProcessGroupCommandDataIB(CommandDataIB::Parser & aCo
+                 continue;
+             }
+         }
++#if ZB_BRIDGE  //additional argument "commandDataReader" added
++        if ((err = DataModelCallbacks::GetInstance()->PreCommandReceived(concretePath, GetSubjectDescriptor(),commandDataReader)) == CHIP_NO_ERROR)
++#else
+         if ((err = DataModelCallbacks::GetInstance()->PreCommandReceived(concretePath, GetSubjectDescriptor())) == CHIP_NO_ERROR)
++#endif
+         {
+             TLV::TLVReader dataReader(commandDataReader);
+             mpCallback->DispatchCommand(*this, concretePath, dataReader);
+diff --git a/src/app/clusters/color-control-server/color-control-server.cpp b/src/app/clusters/color-control-server/color-control-server.cpp
+index 2a85888422..f9e63e4e23 100644
+--- a/src/app/clusters/color-control-server/color-control-server.cpp
++++ b/src/app/clusters/color-control-server/color-control-server.cpp
+@@ -1519,7 +1519,7 @@ bool ColorControlServer::moveToHueCommand(app::CommandHandler * commandObj, cons
+     MATTER_TRACE_SCOPE("moveToHue", "ColorControl");
+     EndpointId endpoint = commandPath.mEndpointId;
+ 
+-    Status status       = Status::Success;
++    Status status = Status::Success;
+     uint16_t currentHue = 0;
+     DirectionEnum direction;
+ 
+@@ -1531,8 +1531,8 @@ bool ColorControlServer::moveToHueCommand(app::CommandHandler * commandObj, cons
+     // this and report a constraint error.
+     if (!isEnhanced && (hue > MAX_HUE_VALUE))
+     {
+-        commandObj->AddStatus(commandPath, Status::ConstraintError);
+-        return true;
++       commandObj->AddStatus(commandPath, status);
++       return true;
+     }
+ 
+     if (isEnhanced)
+@@ -1628,7 +1628,11 @@ bool ColorControlServer::moveToHueCommand(app::CommandHandler * commandObj, cons
+     scheduleTimerCallbackMs(configureHSVEventControl(endpoint), transitionTime ? TRANSITION_UPDATE_TIME_MS.count() : 0);
+ 
+ exit:
++#if ZB_BRIDGE
++    commandObj->AddStatus(commandPath,Status::Success); // status fix to Success
++#else
+     commandObj->AddStatus(commandPath, status);
++#endif
+     return true;
+ }
+ 
+@@ -1883,7 +1887,12 @@ bool ColorControlServer::moveToSaturationCommand(app::CommandHandler * commandOb
+ #ifdef MATTER_DM_PLUGIN_SCENES_MANAGEMENT
+     ScenesManagement::ScenesServer::Instance().MakeSceneInvalidForAllFabrics(commandPath.mEndpointId);
+ #endif // MATTER_DM_PLUGIN_SCENES_MANAGEMENT
++
++#if ZB_BRIDGE
++    commandObj->AddStatus(commandPath, Status::Success); // status fix to Success
++#else
+     commandObj->AddStatus(commandPath, status);
++#endif
+     return true;
+ }
+ 
+@@ -2316,7 +2325,12 @@ bool ColorControlServer::moveToColorCommand(app::CommandHandler * commandObj, co
+ #ifdef MATTER_DM_PLUGIN_SCENES_MANAGEMENT
+     ScenesManagement::ScenesServer::Instance().MakeSceneInvalidForAllFabrics(commandPath.mEndpointId);
+ #endif // MATTER_DM_PLUGIN_SCENES_MANAGEMENT
++
++#if ZB_BRIDGE
++    commandObj->AddStatus(commandPath, Status::Success); // status fix to Success
++#else
+     commandObj->AddStatus(commandPath, status);
++#endif
+     return true;
+ }
+ 
+@@ -2898,7 +2912,11 @@ bool ColorControlServer::moveToColorTempCommand(app::CommandHandler * commandObj
+ #ifdef MATTER_DM_PLUGIN_SCENES_MANAGEMENT
+     ScenesManagement::ScenesServer::Instance().MakeSceneInvalidForAllFabrics(commandPath.mEndpointId);
+ #endif // MATTER_DM_PLUGIN_SCENES_MANAGEMENT
++#if ZB_BRIDGE
++    commandObj->AddStatus(commandPath, Status::Success); // status fix to Success
++#else
+     commandObj->AddStatus(commandPath, status);
++#endif
+     return true;
+ }
+ 
+diff --git a/src/app/clusters/level-control/level-control.cpp b/src/app/clusters/level-control/level-control.cpp
+index c176d6f6b1..fe72c47b8a 100644
+--- a/src/app/clusters/level-control/level-control.cpp
++++ b/src/app/clusters/level-control/level-control.cpp
+@@ -669,7 +669,12 @@ bool emberAfLevelControlClusterMoveToLevelCallback(CommandHandler * commandObj,
+                                                    const Commands::MoveToLevel::DecodableType & commandData)
+ {
+     MATTER_TRACE_SCOPE("MoveToLevel", "LevelControl");
++    LevelControlServer::MoveToLevel(commandPath.mEndpointId, commandData);
++#if ZB_BRIDGE
++    commandObj->AddStatus(commandPath,Status::Success);//2nd argument forced to Status::Success for Bridged ZB node
++#else
+     commandObj->AddStatus(commandPath, LevelControlServer::MoveToLevel(commandPath.mEndpointId, commandData));
++#endif
+     return true;
+ }
+ 
+diff --git a/src/app/clusters/on-off-server/on-off-server.cpp b/src/app/clusters/on-off-server/on-off-server.cpp
+index d18aa09383..199166ee88 100644
+--- a/src/app/clusters/on-off-server/on-off-server.cpp
++++ b/src/app/clusters/on-off-server/on-off-server.cpp
+@@ -593,7 +593,11 @@ bool OnOffServer::offCommand(app::CommandHandler * commandObj, const app::Concre
+     MATTER_TRACE_SCOPE("OffCommand", "OnOff");
+     Status status = setOnOffValue(commandPath.mEndpointId, Commands::Off::Id, false);
+ 
++#if ZB_BRIDGE
++    commandObj->AddStatus(commandPath, Status::Success);//2nd argument forced to Status::Success for Bridged ZB node
++#else
+     commandObj->AddStatus(commandPath, status);
++#endif
+     return true;
+ }
+ 
+@@ -602,7 +606,11 @@ bool OnOffServer::onCommand(app::CommandHandler * commandObj, const app::Concret
+     MATTER_TRACE_SCOPE("OnCommand", "OnOff");
+     Status status = setOnOffValue(commandPath.mEndpointId, Commands::On::Id, false);
+ 
++#if ZB_BRIDGE
++    commandObj->AddStatus(commandPath, Status::Success);//2nd argument forced to Status::Success for Bridged ZB node
++#else
+     commandObj->AddStatus(commandPath, status);
++#endif
+     return true;
+ }
+ 
+@@ -611,7 +619,11 @@ bool OnOffServer::toggleCommand(app::CommandHandler * commandObj, const app::Con
+     MATTER_TRACE_SCOPE("ToggleCommand", "OnOff");
+     Status status = setOnOffValue(commandPath.mEndpointId, Commands::Toggle::Id, false);
+ 
++#if ZB_BRIDGE
++    commandObj->AddStatus(commandPath, Status::Success);//2nd argument forced to Status::Success for Bridged ZB node
++#else
+     commandObj->AddStatus(commandPath, status);
++#endif
+     return true;
+ }
+ 
+diff --git a/src/app/util/BUILD.gn b/src/app/util/BUILD.gn
+index 29b3bc9563..3abb3e8254 100644
+--- a/src/app/util/BUILD.gn
++++ b/src/app/util/BUILD.gn
+@@ -15,6 +15,10 @@
+ import("//build_overrides/chip.gni")
+ import("${chip_root}/src/app/common_flags.gni")
+ 
++defines =[
++    "ZB_BRIDGE=1",
++]
++
+ source_set("nullable-primitives") {
+   sources = [
+     "attribute-storage-null-handling.h",
+diff --git a/src/app/util/MatterCallbacks.cpp b/src/app/util/MatterCallbacks.cpp
+index c4760930be..0d459addc3 100644
+--- a/src/app/util/MatterCallbacks.cpp
++++ b/src/app/util/MatterCallbacks.cpp
+@@ -47,11 +47,13 @@ void MatterPreAttributeReadCallback(const chip::app::ConcreteAttributePath & att
+ void MatterPostAttributeReadCallback(const chip::app::ConcreteAttributePath & attributePath) {}
+ void MatterPreAttributeWriteCallback(const chip::app::ConcreteAttributePath & attributePath) {}
+ void MatterPostAttributeWriteCallback(const chip::app::ConcreteAttributePath & attributePath) {}
++#if not ZB_BRIDGE
+ CHIP_ERROR MatterPreCommandReceivedCallback(const chip::app::ConcreteCommandPath & commandPath,
+                                             const chip::Access::SubjectDescriptor & subjectDescriptor)
+ {
+     return CHIP_NO_ERROR;
+ }
++#endif
+ void MatterPostCommandReceivedCallback(const chip::app::ConcreteCommandPath & commandPath,
+                                        const chip::Access::SubjectDescriptor & subjectDescriptor)
+ {}
+diff --git a/src/app/util/MatterCallbacks.h b/src/app/util/MatterCallbacks.h
+index 2b2d0ed1b9..f8a6487309 100644
+--- a/src/app/util/MatterCallbacks.h
++++ b/src/app/util/MatterCallbacks.h
+@@ -19,6 +19,13 @@
+ #include <app/ConcreteAttributePath.h>
+ #include <app/ConcreteCommandPath.h>
+ 
++#if ZB_BRIDGE
++#include <lib/core/TLVReader.h>
++CHIP_ERROR MatterPreCommandReceivedCallback(const chip::app::ConcreteCommandPath & commandPath,
++                                            const chip::Access::SubjectDescriptor & subjectDescriptor,
++                                            const chip::TLV::TLVReader & commandDataReader);
++#endif
++
+ namespace chip {
+ 
+ /// Allows for application hooks for processing attribute and command operations
+@@ -54,11 +61,21 @@ public:
+     /// CommandDataIB entries).
+     ///
+     /// Returning an error here will prevent the command to be dispatched further
++#if ZB_BRIDGE
++    virtual CHIP_ERROR PreCommandReceived(const chip::app::ConcreteCommandPath & commandPath,
++                                          const chip::Access::SubjectDescriptor & subjectDescriptor,
++									  const chip::TLV::TLVReader & commandDataReader)
++    {
++        MatterPreCommandReceivedCallback(commandPath,subjectDescriptor,commandDataReader);
++        return CHIP_NO_ERROR;
++    }
++#else
+     virtual CHIP_ERROR PreCommandReceived(const chip::app::ConcreteCommandPath & commandPath,
+-                                          const chip::Access::SubjectDescriptor & subjectDescriptor)
++									  const chip::Access::SubjectDescriptor & subjectDescriptor)
+     {
+         return CHIP_NO_ERROR;
+     }
++#endif
+ 
+     /// This callback is called once for every command dispatch, after the dispatch is actually
+     /// done towards the receiver.
+diff --git a/src/app/util/attribute-storage.h b/src/app/util/attribute-storage.h
+index 9d2dcc60bb..4626b5bbd9 100644
+--- a/src/app/util/attribute-storage.h
++++ b/src/app/util/attribute-storage.h
+@@ -35,7 +35,11 @@ static constexpr uint16_t kEmberInvalidEndpointIndex = 0xFFFF;
+ 
+ // If we have fixed number of endpoints, then max is the same.
+ #ifdef FIXED_ENDPOINT_COUNT
++#if 0
+ #define MAX_ENDPOINT_COUNT (FIXED_ENDPOINT_COUNT + CHIP_DEVICE_CONFIG_DYNAMIC_ENDPOINT_COUNT)
++#else
++#define MAX_ENDPOINT_COUNT (FIXED_ENDPOINT_COUNT + 16)
++#endif
+ #endif
+ 
+ #define DECLARE_DYNAMIC_ENDPOINT(endpointName, clusterList)                                                                        \
+diff --git a/src/platform/nxp/rt/rw61x/args.gni b/src/platform/nxp/rt/rw61x/args.gni
+index e008e7b13a..0fe5a5f712 100644
+--- a/src/platform/nxp/rt/rw61x/args.gni
++++ b/src/platform/nxp/rt/rw61x/args.gni
+@@ -58,7 +58,7 @@ declare_args() {
+ 
+ # By default nxp_nvm_component is set to "littlefs" in nxp_sdk.gni,
+ # here we override it to set it to "nvs" for RW61x platform
+-nxp_nvm_component = "nvs"
++# nxp_nvm_component = "nvs"
+ 
+ mbedtls_target = "${nxp_sdk_build_root}:nxp_mbedtls"
+ 

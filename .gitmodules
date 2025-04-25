@@ -1,0 +1,4 @@
+[submodule "bridge-app/nxp/rt/rw61x/third_party/matter"]
+	path = bridge-app/nxp/rt/rw61x/third_party/matter
+	url = https://github.com/NXP/matter.git
+	branch = release/v1.4.0

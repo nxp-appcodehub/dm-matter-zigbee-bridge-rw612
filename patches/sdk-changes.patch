@@ -1,0 +1,119 @@
+diff --git a/examples/platform/rt/rw61x/board/frdmrw612/board.c b/examples/platform/rt/rw61x/board/frdmrw612/board.c
+index be1f66f..0df0f60 100644
+--- a/examples/platform/rt/rw61x/board/frdmrw612/board.c
++++ b/examples/platform/rt/rw61x/board/frdmrw612/board.c
+@@ -37,6 +37,14 @@ void BOARD_InitDebugConsole(void)
+ {
+     uint32_t uartClkSrcFreq = 0;
+ 
++#if 1 //added to enable USART1 for connection with ZB GW
++    CLOCK_SetFRGClock(BOARD_ZB_UART_FRG_CLK);
++    CLOCK_AttachClk(BOARD_ZB_UART_CLK_ATTACH);
++
++    uartClkSrcFreq = BOARD_ZB_UART_CLK_FREQ;
++    DbgConsole_Init(BOARD_ZB_UART_INSTANCE, BOARD_ZB_UART_BAUDRATE, BOARD_DEBUG_UART_TYPE, uartClkSrcFreq);
++#endif
++
+     /* attach FRG0 clock to FLEXCOMM3 (debug console) */
+     CLOCK_SetFRGClock(BOARD_DEBUG_UART_FRG_CLK);
+     CLOCK_AttachClk(BOARD_DEBUG_UART_CLK_ATTACH);
+diff --git a/examples/platform/rt/rw61x/board/frdmrw612/board.h b/examples/platform/rt/rw61x/board/frdmrw612/board.h
+index 20b2925..a24e8e2 100644
+--- a/examples/platform/rt/rw61x/board/frdmrw612/board.h
++++ b/examples/platform/rt/rw61x/board/frdmrw612/board.h
+@@ -58,6 +58,25 @@
+ #define BOARD_DEBUG_UART_BAUDRATE 115200
+ #endif /* BOARD_DEBUG_UART_BAUDRATE */
+ 
++#if 1 //added for USART1 to connect with ZB GW
++#define BOARD_ZB_UART_BASEADDR (uint32_t) FLEXCOMM1
++#define BOARD_ZB_UART_INSTANCE 1U
++#define BOARD_ZB_UART USART1
++#define BOARD_ZB_UART_CLK_FREQ CLOCK_GetFlexCommClkFreq(1)
++#define BOARD_ZB_UART_FRG_CLK                                                                                                   \
++    (&(const clock_frg_clk_config_t){ 1, kCLOCK_FrgPllDiv, 255, 0 }) /*!< Select FRG1 mux as frg_pll                               \
++                                                                      */
++#define BOARD_ZB_UART_CLK_ATTACH kFRG_to_FLEXCOMM1
++#define BOARD_ZB_UART_RST kFC1_RST_SHIFT_RSTn
++#define BOARD_ZB_UART_CLKSRC kCLOCK_Flexcomm1
++#define BOARD_ZB_UART_IRQ_HANDLER FLEXCOMM1_IRQHandler
++#define BOARD_ZB_UART_IRQ FLEXCOMM1_IRQn
++
++#define BOARD_ZB_UART_IRQLevel 3
++
++#define BOARD_ZB_UART_BAUDRATE 1000000
++#endif
++
+ #define BOARD_FLEXSPI_PSRAM FLEXSPI
+ #ifndef BOARD_ENABLE_PSRAM_CACHE
+ #define BOARD_ENABLE_PSRAM_CACHE 1
+diff --git a/examples/platform/rt/rw61x/board/pin_mux.c b/examples/platform/rt/rw61x/board/pin_mux.c
+index 2151c0b..a2912f9 100644
+--- a/examples/platform/rt/rw61x/board/pin_mux.c
++++ b/examples/platform/rt/rw61x/board/pin_mux.c
+@@ -32,6 +32,10 @@ void BOARD_InitPins(void)
+     IO_MUX_SetPinMux(IO_MUX_GPIO25);
+     /* FLEXCOMM0 TX for logging*/
+     IO_MUX_SetPinMux(IO_MUX_FC0_USART_DATA);
++#if 1  //added UART1 to communicate with external ZB GW
++    IO_MUX_SetPinMux(IO_MUX_FC1_USART_DATA);
++    IO_MUX_SetPinMux(IO_MUX_GPIO19);
++#endif
+ }
+ 
+ void BOARD_InitPinButton0(void)
+diff --git a/examples/platform/rt/rw61x/board/rdrw612bga/board.c b/examples/platform/rt/rw61x/board/rdrw612bga/board.c
+index ceedb9f..0b8cb19 100644
+--- a/examples/platform/rt/rw61x/board/rdrw612bga/board.c
++++ b/examples/platform/rt/rw61x/board/rdrw612bga/board.c
+@@ -37,6 +37,12 @@ void BOARD_InitDebugConsole(void)
+ {
+     uint32_t uartClkSrcFreq = 0;
+ 
++#if 1 //added to enable USART14 for connection with ZB GW
++    CLOCK_SetFRGClock(BOARD_ZB_UART_FRG_CLK);
++    CLOCK_AttachClk(BOARD_ZB_UART_CLK_ATTACH);
++    DbgConsole_Init(BOARD_ZB_UART_INSTANCE, BOARD_DEBUG_UART_BAUDRATE, BOARD_DEBUG_UART_TYPE, 20000000/*uartClkSrcFreq*/); //fix uartClkSrcFreq to 20000000
++#endif
++
+     /* attach FRG0 clock to FLEXCOMM3 (debug console) */
+     CLOCK_SetFRGClock(BOARD_DEBUG_UART_FRG_CLK);
+     CLOCK_AttachClk(BOARD_DEBUG_UART_CLK_ATTACH);
+diff --git a/examples/platform/rt/rw61x/board/rdrw612bga/board.h b/examples/platform/rt/rw61x/board/rdrw612bga/board.h
+index e91c252..d3e7c79 100644
+--- a/examples/platform/rt/rw61x/board/rdrw612bga/board.h
++++ b/examples/platform/rt/rw61x/board/rdrw612bga/board.h
+@@ -157,6 +157,20 @@
+ #define BOARD_CLI_FRG_CLK (&(const clock_frg_clk_config_t){ 3, kCLOCK_FrgPllDiv, 255, 0 }) /*!< Select FRG3 mux as frg_pll */
+ #define BOARD_CLI_CLK_ATTACH kFRG_to_FLEXCOMM3
+ 
++#if 1 //added for USART14 to connect with ZB GW
++#define BOARD_ZB_UART_INSTANCE       4
++#define BOARD_ZB_UART_BASEADDR       USART14
++#define BOARD_ZB_UART_IRQn           FLEXCOMM14_IRQn
++#define BOARD_ZB_UART_IRQHandler     FLEXCOMM14_IRQHandler
++#define BOARD_ZB_UART_FRG_CLK \
++    (&(const clock_frg_clk_config_t){14, kCLOCK_FrgPllDiv, 255, 0}) /*!< Select FRG3 mux as frg_pll */
++#define BOARD_ZB_UART_CLK_ATTACH    kFRG_to_FLEXCOMM14
++
++#define BOARD_ZB_UART_IRQLevel 3
++
++#define BOARD_ZB_UART_BAUDRATE 1000000
++#endif
++
+ #if defined(__cplusplus)
+ extern "C" {
+ #endif /* __cplusplus */
+diff --git a/gn_build/rt_sdk/nxp_executable.gni b/gn_build/rt_sdk/nxp_executable.gni
+index 134ce68..339c7f8 100644
+--- a/gn_build/rt_sdk/nxp_executable.gni
++++ b/gn_build/rt_sdk/nxp_executable.gni
+@@ -20,7 +20,7 @@ import("${build_root}/toolchain/flashable_executable.gni")
+ 
+ template("rt_executable") {
+   output_base_name = get_path_info(invoker.output_name, "name")
+-  objcopy_image_name = output_base_name + ".hex"
++  objcopy_image_name = output_base_name + ".srec"
+   objcopy_image_format = "srec"
+   objcopy = "arm-none-eabi-objcopy"
+ 
