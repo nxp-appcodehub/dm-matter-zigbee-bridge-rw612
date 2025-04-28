@@ -1,0 +1,13 @@
+NXP Software Content Register
+
+Package:                   an-matter-zigbee-bridge-rw612
+
+Version:                   1.0
+Outgoing License:          Apache-2.0
+License File:              LICENSE.txt
+Type of content:           source code
+Description and comments:  This application code is to demostrate Matter Zigbee Bridge implementation based on RW612.
+Release Location:          https://github.com/nxp-appcodehub/an-matter-zigbee-bridge-rw612
+Origin:                    NXP (BSD-3-Clause)
+                           CSA-Matter 1.3.0.0 (Apache-2.0)
+ 						   
