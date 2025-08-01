@@ -627,7 +627,7 @@ int32_t shell_RegisterCommand(const shell_command_context_t *command_context) //
     return result;
 }
 
-int32_t dummy_printf( const char *pcFormat, ... )
+int dummy_printf( const char *pcFormat, ... )
 {
     return 0;
 }

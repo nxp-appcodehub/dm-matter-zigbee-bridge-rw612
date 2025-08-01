@@ -57,17 +57,6 @@ typedef enum
     E_ZD_BROADCAST_ZC_ZR /* broadcast only to coordinator and routers */
 } teZDBroadcastMode;
 
-
-  /* On/Off Command - Payload */
-typedef enum 
-{ 
-    E_CLD_ONOFF_CMD_OFF                      = 0x00,     /* Mandatory */
-    E_CLD_ONOFF_CMD_ON,                                  /* Mandatory */
-    E_CLD_ONOFF_CMD_TOGGLE,                              /* Mandatory */
-} teZDOnOffCommand;
-
-
-
 typedef struct
 {
     teZDAddressMode eAddressMode;

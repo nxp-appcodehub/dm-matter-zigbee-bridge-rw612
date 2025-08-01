@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 NXP
+ * Copyright 2021-2023, 2025 NXP
  * All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
@@ -38,7 +38,8 @@ teZcbStatus eSetPermitJoining(uint8_t u8Interval);
 teZcbStatus eSetChannelMask(uint32_t u32ChannelMask);
 teZcbStatus eSetDeviceType(teModuleMode eModuleMode);
 teZcbStatus eStartNetwork(void);
-
+teZcbStatus eStartSteer(void);
+teZcbStatus eStartFindAndBind(void);
 teZcbStatus eErasePersistentData(void);
 teZcbStatus eResetDevice(void);
 teZcbStatus eMgmtLeaveRequst(uint16_t u16ShortAddr,

@@ -3,29 +3,10 @@
 The bridge-app example implements a server which can be accessed by a CHIP
 controller and can accept basic cluster commands.
 
-This bridge-app support RW612 as OTBR with Matter-Zigbee-Bridge functionality supported 
-by connecting to an external standalone Zigbee Coordinator (JN5189/K32W061) through UART
+This bridge-app support RW612 as Matter-Zigbee-Bridge functionality 
 so that Non-Matter nodes like Zigbee light or sensor devices can be controlled by Matter.
 
-UART14 on RW612 has been connected to JN5189/K32W061 Mezzanine module, 
-which is used as the external Zigbee coordinator that flashed with AN1247 image 
-but its UART baud rate is 115200 bps instead of the default 1000000 bps.
-
-     Mezzanine          RW612 BGA
-   J1 Pin 5 TXD  <--->  HD8 Pin 2
-   J1 Pin 7 RXD  <--->  HD8 Pin 1
-  J1 Pin 16 RSTN <--->  HD8 Pin 7
-  J1 Pin 17 VCC  <--->  J13 Pin 7
-  J1 Pin 19 GND  <--->  HD3 Pin 6
-
-UART14:
-    - Baud rate: 115200
-    - 8 data bits
-    - 1 stop bit
-    - No parity
-    - No flow control
-
-OT-CLI is required with additonal commands to control the external Zigbee Coordinator:
+There are  additonal commands to control the external Zigbee Coordinator:
    - zb-erasepdm   (factory reset Zigbee Coordinator by erase all network data)
    - zb-nwk-form   (form Zigbee network)
    - zb-nwk-pjoin  (permit join Zigbee node : 0 to disable, 255 to enable)
@@ -60,26 +41,13 @@ RW612 SDK.
 The example supports:
 
 -   Matter over Wi-Fi
--   Matter over Openthread
--   Matter over Wi-Fi with OpenThread Border Router support.
 
 ### Hardware requirements
-
-For Matter over Thread configuration :
-
--   [`NXP RD-RW612-BGA`] board
--   BLE/15.4 antenna (to plug in Ant1)
 
 For Matter over WiFi configuration :
 
 -   [`NXP RD-RW612-BGA`] or [`NXP RD-RW610-BGA`] board
 -   BLE antenna (to plug in Ant1)
--   Wi-Fi antenna (to plug in Ant2)
-
-For Matter over Wi-Fi with OpenThread Border Router :
-
--   [`NXP RD-RW612-BGA`] board
--   BLE/15.4 antenna (to plug in Ant1)
 -   Wi-Fi antenna (to plug in Ant2)
 
 <a name="building"></a>
@@ -89,91 +57,11 @@ For Matter over Wi-Fi with OpenThread Border Router :
 In order to build the Project CHIP example, we recommend using a Linux
 distribution (the demo-application was compiled on Ubuntu 20.04).
 
--   Follow instruction in [BUILDING.md](../../../../../docs/guides/BUILDING.md)
+-   Follow instruction in [nxp_examples_freertos_platforms.md](third_party/matter/docs/platforms/nxp/nxp_examples_freertos_platforms.md)
     to setup the environment to be able to build Matter.
 
 -   Download the NXP MCUXpresso git SDK and associated middleware using the west
     tool.
-
-```
-user@ubuntu:~/Desktop/git/connectedhomeip$ scripts/checkout_submodules.py --shallow --platform nxp --recursive
-user@ubuntu:~/Desktop/git/connectedhomeip$ source ./scripts/bootstrap.sh
-user@ubuntu:~/Desktop/git/connectedhomeip$ source ./scripts/activate.sh
-user@ubuntu:~/Desktop/git/connectedhomeip$ cd third_party/nxp/github_sdk/rw_k32w1
-user@ubuntu:~/Desktop/git/connectedhomeip/third_party/nxp/github_sdk/rw_k32w1$ west init -l manifest --mf west.yml
-user@ubuntu:~/Desktop/git/connectedhomeip/third_party/nxp/github_sdk/rw_k32w1$ west update
-```
-
--   Start building the application.
-
-```
-user@ubuntu:~/Desktop/git/connectedhomeip$ cd examples/bridge-app/nxp/rt/rw61x/
-```
-
-#### Building with Matter over Wifi configuration on RW61x
-
--   Build Matter-over-Wifi configuration with BLE commissioning (ble-wifi) :
-
-```
-user@ubuntu:~/Desktop/git/connectedhomeip/examples/bridge-app/nxp/rt/rw61x$ gn gen --args="chip_enable_wifi=true is_sdk_2_15=true" out/debug
-user@ubuntu:~/Desktop/git/connectedhomeip/examples/bridge-app/nxp/rt/rw61x$ ninja -C out/debug
-```
-
-#### Building with Matter over Thread configuration on RW612
-
--   Build Matter-over-Thread configuration with BLE commissioning.
-
-```
-user@ubuntu:~/Desktop/git/connectedhomeip/examples/bridge-app/nxp/rt/rw61x$ gn gen --args="chip_enable_openthread=true chip_inet_config_enable_ipv4=false chip_config_network_layer_ble=true is_sdk_2_15=true" out/debug
-user@ubuntu:~/Desktop/git/connectedhomeip/examples/bridge-app/nxp/rt/rw61x$ ninja -C out/debug
-```
-
-#### Building with Matter over Wifi + OpenThread Border Router configuration on RW612
-
-This configuration requires enabling the Matter CLI in order to control the
-Thread network on the Border Router.
-
--   Build Matter with Border Router configuration with BLE commissioning
-    (ble-wifi) :
-
-```
-user@ubuntu:~/Desktop/git/connectedhomeip/examples/bridge-app/nxp/rt/rw610$ gn gen --args="chip_enable_wifi=true chip_enable_openthread=true chip_enable_matter_cli=true is_sdk_2_15=true openthread_root=\"//third_party/connectedhomeip/third_party/openthread/ot-nxp/openthread-br\" rt_nvm_component = \"littlefs\" enable_bridge=true" out/debug
-user@ubuntu:~/Desktop/git/connectedhomeip/examples/bridge-app/nxp/rt/rw610$ ninja -C out/debug
-```
-
-#### General information
-
-The resulting output file can be found in
-out/debug/chip-rw61x-bridge-example.
-
-Mandatory GN options that must be added when building an application:
--   To enable ZB Bridge
-    enable_bridge=true must be added to the _gn gen_ command. 
-
--   To enable LittleFS
-    rt_nvm_component = \"littlefs\" must be added to the _gn gen_ command. 
-	
-Optional GN options that can be added when building an application:
--   To enable the
-    [matter CLI](README.md#testing-the-bridge-application-with-matter-cli-enabled),
-    the argument `chip_enable_matter_cli=true` must be added to the _gn gen_
-    command.
--   To switch the SDK type used, the argument `is_<sdk_type>=true` must be added
-    to the _gn gen_ command (with <sdk_type> being either sdk_package or
-    sdk_internal or sdk_2_15).
--   By default, the RW612 A1 board revision will be chosen. To switch to an A2
-    revision, the argument `board_version=\"A2\"` must be added to the _gn gen_
-    command.
--   To build the application in debug mode, the argument
-    `is_debug=true optimize_debug=false` must be added to the _gn gen_ command.
--   To build with the option to have Matter certificates/keys pre-loaded in a
-    specific flash area the argument `chip_with_factory_data=1` must be added to
-    the _gn gen_ command. (for more information see
-    [Guide for writing manufacturing data on NXP devices](../../../../../docs/guides/nxp_manufacturing_flow.md).
--   To build the application with the OTA Requestor enabled, the arguments
-    `chip_enable_ota_requestor=true no_mcuboot=false` must be added to the _gn
-    gen_ command. (More information about the OTA Requestor feature in
-    [OTA Requestor README](../../../../../docs/guides/nxp_rw61x_ota_software_update.md)
 
 ## Manufacturing data
 
@@ -277,20 +165,6 @@ IP'][readme_pair_ip_commissioning_section]
 
 The "ble-wifi" pairing method can be used in order to commission the device.
 
-#### Matter over thread configuration :
-
-The "ble-thread" pairing method can be used in order to commission the device.
-
-#### Matter over wifi with openthread border router configuration :
-
-In order to create or join a Thread network on the Matter Border Router, the
-`otcli` commands from the matter CLI can be used. For more information about
-using the matter shell, follow instructions from
-['Testing the bridge application with Matter CLI'](#testing-the-bridge-application-with-matter-cli-enabled).
-
-In this configuration, the device can be commissioned over Wi-Fi with the
-'ble-wifi' pairing method.
-
 ### NVM
 
 By default the file system used by the application is NVS.
@@ -365,41 +239,6 @@ Here are described steps to use the bridge-app with the Matter CLI enabled
 4. On the client side, start sending commands using the chip-tool application as
    it is described
    [here](../../../../chip-tool/README.md#using-the-client-to-send-matter-commands).
-
-For Matter with OpenThread Border Router support, the matter CLI can be used to
-start/join the Thread network, using the following ot-cli commands. (Note that
-setting channel, panid, and network key is not enough anymore because of an Open
-Thread stack update. We first need to initialize a new dataset.)
-
-```
-> otcli dataset init new
-Done
-> otcli dataset
-Active Timestamp: 1
-Channel: 25
-Channel Mask: 0x07fff800
-Ext PAN ID: 42af793f623aab54
-Mesh Local Prefix: fd6e:c358:7078:5a8d::/64
-Network Key: f824658f79d8ca033fbb85ecc3ca91cc
-Network Name: OpenThread-b870
-PAN ID: 0xb870
-PSKc: f438a194a5e968cc43cc4b3a6f560ca4
-Security Policy: 672 onrc 0
-Done
-> otcli dataset panid 0xabcd
-Done
-> otcli dataset channel 25
-Done
-> otcli dataset commit active
-Done
-> otcli ifconfig up
-Done
-> otcli thread start
-Done
-> otcli state
-leader
-Done
-```
 
 <a name="ota-software-update"></a>
 

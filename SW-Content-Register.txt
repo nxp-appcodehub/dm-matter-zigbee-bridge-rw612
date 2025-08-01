@@ -1,23 +1,10 @@
-NXP Software Content Register
-
-Package:                   an-matter-zigbee-bridge-rw612
-
-Version:              1.1
-Outgoing License:     Apache-2.0
-License file:         License.txt
-Description:          The application example in this repository enables bridging of non Matter devices such as Legacy Zigbee devices to the Matter ecosystem 
-                      using NXP Wireless MCU system composed of NXP RW612 (with OpenThread Border Router support - Openthread + WiFi) and
-                      NXP K32W0x1 (with Zigbee support).
-Release location:     https://github.com/nxp-appcodehub/dm-matter-zigbee-bridge-rw612
-Origin:               NXP (Apache-2.0)
-                      NXP (BSD-3-Clause)
-                      Connectivity Standards Alliance (Apache-2.0)
-
-Matter SDK            Name: Matter
-                      Version: v1.4.0.1.1
-                      Outgoing license: Apache License 2.0
-                      License File: bridge-app/nxp/rt/rw61x/third_party/matter/LICENSE
-                      Format: source code
-                      Description and comments: NXP fork of Matter SDK
-                      Release Location: https://github.com/NXP/matter/
-                      Origin: Connectivity Standards Alliance (Apache-2.0) - https://github.com/project-chip/connectedhomeip
+Release Name: an-matter-zigbee-bridge-rw612
+Release Version: 2.0
+Outgoing License: LA_OPT_Online Code Hosting NXP_Software_License - v1.4 May 2025
+Licence in files: Licence.txt
+Description: The application example in this repository enables bridging of non Matter devices such as Legacy Zigbee devices
+to the Matter ecosystem using NXP Wireless MCU RW612 (Matter-Over-WiFi)
+Release location: https://github.com/nxp-appcodehub/dm-matter-zigbee-bridge-rw612
+Origin: NXP (BSD-3-clause)
+NXP (Apache-2.0)
+Connectivity Standards Alliance (Apache-2.0)

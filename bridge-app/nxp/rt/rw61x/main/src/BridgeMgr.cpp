@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2023 Project CHIP Authors
+ *    Copyright (c) 2023, 2025 Project CHIP Authors
  *    All rights reserved.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +23,8 @@
 #include "zcb.h"
 #include "ZigbeeConstant.h"
 #include "ZigbeeDevices.h"
+#include "PDM.h"
+#include "ClustersCommandHandlers.h"
 
 #include "CHIPProjectAppConfig.h"
 
@@ -44,6 +46,9 @@ DECLARE_DYNAMIC_ENDPOINT(bridgedColorEndpoint, COLORCONTROL_CLUSTER_LIST);
 DECLARE_DYNAMIC_ENDPOINT(bridgedTempSensorEndpoint, TEMPSENSOR_CLUSTER_LIST);
 
 Device* BridgeDevMgr::gDevices[CHIP_DEVICE_CONFIG_DYNAMIC_ENDPOINT_COUNT];
+OnOffClusterCommandHandler on_off_cmd_handler(chip::app::Clusters::OnOff::Id);
+ColorControlClusterCommandHandler color_control_cmd_handler(chip::app::Clusters::ColorControl::Id);
+LevelControlClusterCommandHandler level_control_cmd_handler(chip::app::Clusters::LevelControl::Id);
 
 BridgeDevMgr::BridgeDevMgr()
 {
@@ -52,6 +57,10 @@ BridgeDevMgr::BridgeDevMgr()
 BridgeDevMgr::~BridgeDevMgr()
 {
     RemoveAllDevice();
+}
+
+extern "C"{
+    void zigbee_main(void *param);
 }
 
 void BridgeDevMgr::AddOnOffNode(ZigbeeDev_t *ZigbeeDev)
@@ -238,6 +247,20 @@ if (rt != pdPASS) {
 	return -1;
 }
 
+#define ZIGBEE_TASK_STACK_SIZE   1024
+#define ZIGBEE_TASK_PRIORITY     1
+rt= xTaskCreate(&zigbee_main,
+                "zigbee_main", 
+                ZIGBEE_TASK_STACK_SIZE, 
+                NULL, 
+                ZIGBEE_TASK_PRIORITY,
+                NULL);
+
+if (rt != pdPASS) {
+    ChipLogError(DeviceLayer, "### zigbee_main is Fail ### ");
+    return -1;
+}
+
     return 0;
 }
 
@@ -309,7 +332,7 @@ extern char * myDB_filename;
 int BridgeDevMgr::AddDeviceEndpoint(Device * dev, EmberAfEndpointType * ep, const Span<const EmberAfDeviceType> & deviceTypeList,
                       const Span<DataVersion> & dataVersionStorage, chip::EndpointId parentEndpointId = chip::kInvalidEndpointId)
 {
-	JoinedNodesSaved savedNodes;
+	JoinedNodesSaved savedNodes = {};
 
     uint8_t index = 0;
 	int ret=0;
@@ -320,7 +343,12 @@ int BridgeDevMgr::AddDeviceEndpoint(Device * dev, EmberAfEndpointType * ep, cons
         return -1;
     }
 
-	ret=ramStorageReadFromFlash(myDB_filename,(uint8_t *)&savedNodes,sizeof(savedNodes));
+#ifdef CONFIG_NVS
+    uint16_t u16ByteRead;
+    ret = (PDM_eReadDataFromRecord(PDM_ID_APP_BRIDGE, (uint8_t *)&savedNodes, sizeof(savedNodes), &u16ByteRead) == 0);
+#else
+    ret = ramStorageReadFromFlash(myDB_filename,(uint8_t *)&savedNodes,sizeof(savedNodes));
+#endif
 	if (ret)
 	{
 		uint8_t j;
@@ -765,270 +793,4 @@ CHIP_ERROR ProcessOnOffClusterCommand(const chip::app::ConcreteCommandPath & aCo
         }
         }
 	return CHIP_NO_ERROR;
-}
-
-CHIP_ERROR ProcessLevelControlClusterCommand(const chip::app::ConcreteCommandPath & aCommandPath,const chip::TLV::TLVReader & commandDataReader)
-{
-	 CHIP_ERROR TLVError = CHIP_NO_ERROR;
-	 chip::TLV::TLVReader aDataTlv(commandDataReader);
-	 switch (aCommandPath.mCommandId)
-        {
-        case app::Clusters::LevelControl::Commands::MoveToLevel::Id: {
-        app::Clusters::LevelControl::Commands::MoveToLevel::DecodableType commandData;
-        TLVError = DataModel::Decode(aDataTlv, commandData); 
-        if (TLVError == CHIP_NO_ERROR) {
-//			PRINTF("\n ### Move to Level : Level=%d,TransTime=%d,EP=%d\n",commandData.level,commandData.transitionTime.Value(),aCommandPath.mEndpointId);
-	      BridgedLevelControl(aCommandPath.mEndpointId,commandData.level,commandData.transitionTime.Value());
-        }
-            break;
-        }
-        case app::Clusters::LevelControl::Commands::Move::Id: {
-        app::Clusters::LevelControl::Commands::Move::DecodableType commandData;
-        TLVError = DataModel::Decode(aDataTlv, commandData);
-        if (TLVError == CHIP_NO_ERROR) {
-        }
-            break;
-        }
-        case app::Clusters::LevelControl::Commands::Step::Id: {
-        app::Clusters::LevelControl::Commands::Step::DecodableType commandData;
-        TLVError = DataModel::Decode(aDataTlv, commandData);
-        if (TLVError == CHIP_NO_ERROR) {
-        }
-            break;
-        }
-        case app::Clusters::LevelControl::Commands::Stop::Id: {
-        app::Clusters::LevelControl::Commands::Stop::DecodableType commandData;
-        TLVError = DataModel::Decode(aDataTlv, commandData);
-        if (TLVError == CHIP_NO_ERROR) {
-        }
-            break;
-        }
-        case app::Clusters::LevelControl::Commands::MoveToLevelWithOnOff::Id: {
-        app::Clusters::LevelControl::Commands::MoveToLevelWithOnOff::DecodableType commandData;
-        TLVError = DataModel::Decode(aDataTlv, commandData);
-        if (TLVError == CHIP_NO_ERROR) {
-        }
-            break;
-        }
-        case app::Clusters::LevelControl::Commands::MoveWithOnOff::Id: {
-        app::Clusters::LevelControl::Commands::MoveWithOnOff::DecodableType commandData;
-        TLVError = DataModel::Decode(aDataTlv, commandData);
-        if (TLVError == CHIP_NO_ERROR) {
-        }
-            break;
-        }
-        case app::Clusters::LevelControl::Commands::StepWithOnOff::Id: {
-        app::Clusters::LevelControl::Commands::StepWithOnOff::DecodableType commandData;
-        TLVError = DataModel::Decode(aDataTlv, commandData);
-        if (TLVError == CHIP_NO_ERROR) {
-        }
-            break;
-        }
-        case app::Clusters::LevelControl::Commands::StopWithOnOff::Id: {
-        app::Clusters::LevelControl::Commands::StopWithOnOff::DecodableType commandData;
-        TLVError = DataModel::Decode(aDataTlv, commandData);
-        if (TLVError == CHIP_NO_ERROR) {
-        }
-            break;
-        }
-        default: {
-            return CHIP_NO_ERROR;
-        }
-        }
-	return CHIP_NO_ERROR;
-}
-
-CHIP_ERROR ProcessColorControlClusterCommand(const chip::app::ConcreteCommandPath & aCommandPath,const chip::TLV::TLVReader & commandDataReader)
-{
-       CHIP_ERROR TLVError = CHIP_NO_ERROR;
-	chip::TLV::TLVReader aDataTlv(commandDataReader);
-	switch (aCommandPath.mCommandId)
-	{
-        case app::Clusters::ColorControl::Commands::MoveToHue::Id: {
-            app::Clusters::ColorControl::Commands::MoveToHue::DecodableType commandData;
-            TLVError = DataModel::Decode(aDataTlv, commandData);
-            if (TLVError == CHIP_NO_ERROR)
-            {
-            PRINTF("\n ### Move to Hue : Hue=0x%x,Dir=%d,TransTime=%d,EP=%d",commandData.hue,commandData.direction,commandData.transitionTime,aCommandPath.mEndpointId);
-			BridgedMoveToHue(aCommandPath.mEndpointId,commandData.hue,(uint8_t)(commandData.direction),commandData.transitionTime);
-            }
-            break;
-        }
-        case app::Clusters::ColorControl::Commands::MoveHue::Id: {
-            app::Clusters::ColorControl::Commands::MoveHue::DecodableType commandData;
-            TLVError = DataModel::Decode(aDataTlv, commandData);
-            if (TLVError == CHIP_NO_ERROR)
-            {
-            }
-            break;
-        }
-        case app::Clusters::ColorControl::Commands::StepHue::Id: {
-            app::Clusters::ColorControl::Commands::StepHue::DecodableType commandData;
-            TLVError = DataModel::Decode(aDataTlv, commandData);
-            if (TLVError == CHIP_NO_ERROR)
-            {
-            }
-            break;
-        }
-        case app::Clusters::ColorControl::Commands::MoveToSaturation::Id: {
-            app::Clusters::ColorControl::Commands::MoveToSaturation::DecodableType commandData;
-            TLVError = DataModel::Decode(aDataTlv, commandData);
-            if (TLVError == CHIP_NO_ERROR)
-            {
-				PRINTF("\n ### Move to Saturation : Sat=0x%x,TransTime=%d,EP=%d\n",commandData.saturation,commandData.transitionTime,aCommandPath.mEndpointId);
-				BridgedMoveToSaturation(aCommandPath.mEndpointId,commandData.saturation,commandData.transitionTime);
-            }
-            break;
-        }
-        case app::Clusters::ColorControl::Commands::MoveSaturation::Id: {
-            app::Clusters::ColorControl::Commands::MoveSaturation::DecodableType commandData;
-            TLVError = DataModel::Decode(aDataTlv, commandData);
-            if (TLVError == CHIP_NO_ERROR)
-            {
-            }
-            break;
-        }
-        case app::Clusters::ColorControl::Commands::StepSaturation::Id: {
-            app::Clusters::ColorControl::Commands::StepSaturation::DecodableType commandData;
-            TLVError = DataModel::Decode(aDataTlv, commandData);
-            if (TLVError == CHIP_NO_ERROR)
-            {
-            }
-            break;
-        }
-        case app::Clusters::ColorControl::Commands::MoveToHueAndSaturation::Id: {
-            app::Clusters::ColorControl::Commands::MoveToHueAndSaturation::DecodableType commandData;
-            TLVError = DataModel::Decode(aDataTlv, commandData);
-            if (TLVError == CHIP_NO_ERROR)
-            {
-            }
-            break;
-        }
-        case app::Clusters::ColorControl::Commands::MoveToColor::Id: {
-            app::Clusters::ColorControl::Commands::MoveToColor::DecodableType commandData;
-            TLVError = DataModel::Decode(aDataTlv, commandData);
-            if (TLVError == CHIP_NO_ERROR)
-            {
-				PRINTF("\n ### Move to Color : X=%d,Y=%d,TransTime=%d,EP=%d\n",commandData.colorX,commandData.colorY,commandData.transitionTime,aCommandPath.mEndpointId);
-				BridgedMoveToColor(aCommandPath.mEndpointId,commandData.colorX,commandData.colorY,commandData.transitionTime);
-            }
-            break;
-        }
-        case app::Clusters::ColorControl::Commands::MoveColor::Id: {
-            app::Clusters::ColorControl::Commands::MoveColor::DecodableType commandData;
-            TLVError = DataModel::Decode(aDataTlv, commandData);
-            if (TLVError == CHIP_NO_ERROR)
-            {
-            }
-            break;
-        }
-        case app::Clusters::ColorControl::Commands::StepColor::Id: {
-            app::Clusters::ColorControl::Commands::StepColor::DecodableType commandData;
-            TLVError = DataModel::Decode(aDataTlv, commandData);
-            if (TLVError == CHIP_NO_ERROR)
-            {
-            }
-            break;
-        }
-        case app::Clusters::ColorControl::Commands::MoveToColorTemperature::Id: {
-            app::Clusters::ColorControl::Commands::MoveToColorTemperature::DecodableType commandData;
-            TLVError = DataModel::Decode(aDataTlv, commandData);
-            if (TLVError == CHIP_NO_ERROR)
-            {
-				PRINTF("\n ### Move to Temperature : Temp=0x%x,TransTime=%d,EP=%d\n",commandData.colorTemperatureMireds,commandData.transitionTime,aCommandPath.mEndpointId);
-				BridgedMoveToColorTemperature(aCommandPath.mEndpointId,commandData.colorTemperatureMireds,commandData.transitionTime);
-	     	}
-            break;
-        }
-        case app::Clusters::ColorControl::Commands::EnhancedMoveToHue::Id: {
-            app::Clusters::ColorControl::Commands::EnhancedMoveToHue::DecodableType commandData;
-            TLVError = DataModel::Decode(aDataTlv, commandData);
-            if (TLVError == CHIP_NO_ERROR)
-            {
-            }
-            break;
-        }
-        case app::Clusters::ColorControl::Commands::EnhancedMoveHue::Id: {
-            app::Clusters::ColorControl::Commands::EnhancedMoveHue::DecodableType commandData;
-            TLVError = DataModel::Decode(aDataTlv, commandData);
-            if (TLVError == CHIP_NO_ERROR)
-            {
-            }
-            break;
-        }
-        case app::Clusters::ColorControl::Commands::EnhancedStepHue::Id: {
-            app::Clusters::ColorControl::Commands::EnhancedStepHue::DecodableType commandData;
-            TLVError = DataModel::Decode(aDataTlv, commandData);
-            if (TLVError == CHIP_NO_ERROR)
-            {
-            }
-            break;
-        }
-        case app::Clusters::ColorControl::Commands::EnhancedMoveToHueAndSaturation::Id: {
-            app::Clusters::ColorControl::Commands::EnhancedMoveToHueAndSaturation::DecodableType commandData;
-            TLVError = DataModel::Decode(aDataTlv, commandData);
-            if (TLVError == CHIP_NO_ERROR)
-            {
-            }
-            break;
-        }
-        case app::Clusters::ColorControl::Commands::ColorLoopSet::Id: {
-            app::Clusters::ColorControl::Commands::ColorLoopSet::DecodableType commandData;
-            TLVError = DataModel::Decode(aDataTlv, commandData);
-            if (TLVError == CHIP_NO_ERROR)
-            {
-            }
-            break;
-        }
-        case app::Clusters::ColorControl::Commands::StopMoveStep::Id: {
-            app::Clusters::ColorControl::Commands::StopMoveStep::DecodableType commandData;
-            TLVError = DataModel::Decode(aDataTlv, commandData);
-            if (TLVError == CHIP_NO_ERROR)
-            {
-            }
-            break;
-        }
-        case app::Clusters::ColorControl::Commands::MoveColorTemperature::Id: {
-            app::Clusters::ColorControl::Commands::MoveColorTemperature::DecodableType commandData;
-            TLVError = DataModel::Decode(aDataTlv, commandData);      
-            if (TLVError == CHIP_NO_ERROR)
-            {
-            }
-            break;
-        }
-        case app::Clusters::ColorControl::Commands::StepColorTemperature::Id: {
-            app::Clusters::ColorControl::Commands::StepColorTemperature::DecodableType commandData;
-            TLVError = DataModel::Decode(aDataTlv, commandData);
-            if (TLVError == CHIP_NO_ERROR)
-            {
-            }
-            break;
-        }
-        default: {
-            return CHIP_NO_ERROR;
-        }
-        }
-	return CHIP_NO_ERROR;
-}
-
-CHIP_ERROR MatterPreCommandReceivedCallback(const chip::app::ConcreteCommandPath & commandPath,const chip::Access::SubjectDescriptor & subjectDescriptor,const chip::TLV::TLVReader & commandDataReader)
-{
-	CHIP_ERROR err = CHIP_NO_ERROR;
-
-       switch(commandPath.mClusterId)
-       {
-        case Clusters::OnOff::Id:
-       		err = ProcessOnOffClusterCommand(commandPath, commandDataReader);
-			break;
-		case Clusters::LevelControl::Id:
-			err = ProcessLevelControlClusterCommand(commandPath, commandDataReader);
-			break;
-		case Clusters::ColorControl::Id:
-			err = ProcessColorControlClusterCommand(commandPath, commandDataReader);
-			break;
-		default :
-			break;
-	   }
-
-	return err;
 }

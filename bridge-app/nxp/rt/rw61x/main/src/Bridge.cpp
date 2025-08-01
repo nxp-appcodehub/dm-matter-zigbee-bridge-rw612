@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2023 Project CHIP Authors
+ *    Copyright (c) 2023, 2025 Project CHIP Authors
  *    All rights reserved.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,8 @@
 #include <cstring>
 
 #include "Bridge.h"
+
+void RegisterZigbeeCommands();
 
 BridgeActions* Bridge::gActions;
 BridgeDevMgr*  Bridge::gDevMgr;
@@ -40,6 +42,7 @@ Bridge::~Bridge()
 
 int Bridge::Init()
 {
+    RegisterZigbeeCommands();
     return 0;
 }
 

@@ -377,7 +377,7 @@ typedef enum
      E_ZB_ATTRIBUTEID_EM_AC_POWER_DIVISOR                   = 0x0605,
 } eZigbee_AttributeIDElectricalMeasurementCluster;
 
-
+#ifdef ZIGBEE_SERIAL_BRIDGE
 /** Enumerated type of attribute data types from ZCL */
 typedef enum PACK
 {
@@ -563,7 +563,7 @@ typedef enum
   //  An error occurred during calibration.
 CALIBRATION_ERROR=0xc2,
 } teZCL_Status;
-
+#endif
 /****************************************************************************/
 /***        Local Function Prototypes                                     ***/
 /****************************************************************************/

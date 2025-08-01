@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 NXP
+ * Copyright 2021-2023, 2025 NXP
  * All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
@@ -26,6 +26,7 @@
 #include "SerialLink.h"
 #include "serial.h"
 #include "zcb.h"
+#include "zcl.h"
 #include "cmd.h"
 
 #define ZB_DEVICE_TABLE_NULL_NODE_ID            0
@@ -387,27 +388,15 @@ void vZDM_NewDeviceQualifyProcess(tsZbDeviceInfo* device)
                     }
                     else
                     {
-                        //wait 1s for the active endpoint response
-                        if (eSL_MessageWait(E_SL_MSG_ACTIVE_ENDPOINT_RESPONSE, 1000, NULL, NULL) != E_SL_OK)
-                        {
-                            PRINTF("\n ### No active endpoint response is received");
-                            if (i == 1) {
-                                device->u8EndpointCount = ZB_DEVICE_ENDPOINT_COUNT_DEFAULT;
-                                device->eDeviceState = E_ZB_DEVICE_STATE_GET_CLUSTER;
-                            } else {
-                                vTaskDelay (pdMS_TO_TICKS(50));
-                            }
-                        } else {
-                            loop = false;
-                            break;
-                        }
+                        loop = false;
+                        break;
                     }
                 }
             }
                 break;
                 
             case E_ZB_DEVICE_STATE_GET_CLUSTER:
-                epArrayIndex ++;
+                epArrayIndex++;
                 for (i = 0; i < 2; i++)
                 {                   
 				if ((device->sZDEndpoint[epArrayIndex - 1].u8EndpointId==0xF2)||(device->sZDEndpoint[epArrayIndex - 1].u8EndpointId==0))
@@ -418,17 +407,9 @@ void vZDM_NewDeviceQualifyProcess(tsZbDeviceInfo* device)
 				    if (eSimpleDescriptorRequest(device->u16NodeId, 1) != E_ZCB_OK)
 			#endif
                     {
-        //                LOG(ZDM, ERR, "Sending simple descriptor request fail\n");                        
+                       PRINTF("Sending simple descriptor request fail\n");                        
                     }
-                    else
-                    {
-                        //wait 1s for the simple descriptor response
-                        if (eSL_MessageWait(E_SL_MSG_SIMPLE_DESCRIPTOR_RESPONSE, 1000, NULL, NULL) != E_SL_OK) {
-         //                   LOG(ZDM, ERR, "No simple descriptor response is received\n");
-                        } else {
-                            break;
-                        }
-                    }
+                    break;
                     vTaskDelay (pdMS_TO_TICKS(50));
                 }
                 loop = false;
@@ -462,34 +443,10 @@ void vZDM_NewDeviceQualifyProcess(tsZbDeviceInfo* device)
                                                               1, 
                                                               au16AttrList) != E_ZCB_OK)
                                     {
-                              //          LOG(ZDM, ERR, "Sending basic model id read request fail\r\n");
-                                        if (k == 1) {
-                                            /*eMgmtLeaveRequst(device->u16NodeId, device->u64IeeeAddress, 0, 1);
-                                            if (bZDM_EraseDeviceFromDeviceTable(device->u64IeeeAddress)) {
-                                                ZCB_DEBUG( "Erase Device Successfullly\r\n");
-                                            }*/
-                                        } else {
-                                            vTaskDelay (pdMS_TO_TICKS(50));
-                                        }
-                                    }
-                                    else
-                                    {
-                                        //wait 1s for the basic mode id response
-                                        if (eSL_MessageWait(E_SL_MSG_READ_ATTRIBUTE_RESPONSE, 1000, NULL, NULL) != E_SL_OK)
-                                        {
-                                 //           LOG(ZDM, ERR, "No basic model id response is received\r\n");
-                                            if (k == 1) {
-                                                /*eMgmtLeaveRequst(device->u16NodeId, device->u64IeeeAddress, 0, 1);
-                                                if (bZDM_EraseDeviceFromDeviceTable(device->u64IeeeAddress)) {
-                                                    ZCB_DEBUG( "Erase Device Successfullly\r\n");
-                                                }*/
-                                            } else {
-                                                vTaskDelay (pdMS_TO_TICKS(50));
-                                            }
-                                        } else {
-                                            loop = false;
-                                            break;
-                                        }                       
+                                        PRINTF("Sending basic model id read request fail\r\n");
+                                        vTaskDelay (pdMS_TO_TICKS(50));
+                                    } else {
+                                        break;
                                     }
                                 }
                             }
@@ -582,7 +539,7 @@ void vZDM_NewDeviceQualifyProcess(tsZbDeviceInfo* device)
                                                                              device->sZDEndpoint[i].u8EndpointId,
                                                                              clusterId,
                                                                              E_ZB_ATTRIBUTEID_COLOUR_CURRENTY,
-                                                                             E_ZB_ATTRIBUTE_UINT64_TYPE);                                        
+                                                                             E_ZB_ATTRIBUTE_UINT64_TYPE); 
                                         eSendBindUnbindCommand(device->u64IeeeAddress,
                                                                device->sZDEndpoint[i].u8EndpointId,
                                                                E_ZB_CLUSTERID_COLOR_CONTROL,

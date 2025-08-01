@@ -1,6 +1,6 @@
 /*
  *
- *    Copyright (c) 2020 Project CHIP Authors
+ *    Copyright (c) 2020, 2025 Project CHIP Authors
  *    All rights reserved.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
@@ -94,7 +94,7 @@ public:
     using DeviceCallback_fn = std::function<void(DeviceOnOff *, DeviceOnOff::Changed_t)>;
     void SetChangeCallback(DeviceCallback_fn aChanged_CB);
 
-    DataVersion DataVersions[ArraySize(LIGHT_CLUSTER_LIST)];
+    DataVersion DataVersions[MATTER_ARRAY_SIZE(LIGHT_CLUSTER_LIST)];
 
 private:
     void HandleDeviceChange(Device * device, Device::Changed_t changeMask);
@@ -117,7 +117,7 @@ public:
     using DeviceCallback_fn = std::function<void(DeviceDimmable *, DeviceDimmable::Changed_t)>;
     void SetChangeCallback(DeviceCallback_fn aChanged_CB);
 
-    DataVersion DataVersions[ArraySize(DIMMABLE_CLUSTER_LIST)];
+    DataVersion DataVersions[MATTER_ARRAY_SIZE(DIMMABLE_CLUSTER_LIST)];
 
 private:
     void HandleDeviceChange(Device * device, Device::Changed_t changeMask);
@@ -139,7 +139,7 @@ public:
     using DeviceCallback_fn = std::function<void(DeviceColor *, DeviceColor::Changed_t)>;
     void SetChangeCallback(DeviceCallback_fn aChanged_CB);
 
-    DataVersion DataVersions[ArraySize(COLORCONTROL_CLUSTER_LIST)];
+    DataVersion DataVersions[MATTER_ARRAY_SIZE(COLORCONTROL_CLUSTER_LIST)];
 
 private:
     void HandleDeviceChange(Device * device, Device::Changed_t changeMask);
@@ -201,7 +201,7 @@ public:
 
     int16_t mMin;
     int16_t mMax;
-    DataVersion DataVersions[ArraySize(TEMPSENSOR_CLUSTER_LIST)];
+    DataVersion DataVersions[MATTER_ARRAY_SIZE(TEMPSENSOR_CLUSTER_LIST)];
 
 private:
     void HandleDeviceChange(Device * device, Device::Changed_t changeMask);

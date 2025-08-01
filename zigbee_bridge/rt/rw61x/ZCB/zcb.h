@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 NXP
+ * Copyright 2021-2023, 2025 NXP
  * All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
@@ -13,7 +13,7 @@
 #include <sys/time.h>
 
 #include "ZigbeeConstant.h"
-
+#include <stdbool.h>
 #include "newDb.h"
 
 #if defined __cplusplus
@@ -152,11 +152,7 @@ teZcbStatus eZCB_Finish(void);
 teZcbStatus eZCB_GetCoordinatorVersion(void);
 
 /**  ZCL Command Control  **/
-teZcbStatus eOnOff(uint8_t u8AddrMode,
-                   uint16_t u16Addr,
-                   uint8_t u8SrcEp,
-                   uint8_t u8DstEp,
-                   uint8_t u8Mode);
+teZcbStatus eOnOff();
 
 teZcbStatus eOn_Off( uint16_t u16ShortAddress, uint8_t u8Mode );
 
@@ -214,6 +210,22 @@ teZcbStatus ZCB_OtaImageNotify(uint8_t u8AddrMode,
                                uint8_t u8SrcEp, 
                                uint8_t u8DstEp,
                                char * ota_notify_hd);
+
+void ZCB_HandleDeviceAnnounce            (uint16_t u16NwkAddr, uint64_t u64IeeeAddr, uint8_t u8Capability);
+void ZCB_HandleDeviceLeave               (uint64_t u64ExtAddr, uint8_t u8Rejoin);
+void ZCB_HandleSimpleDescriptorResponse  (uint16_t u16NwkAddrOfInterest, uint8_t u8Endpoint, uint16_t u16ApplicationProfileId,
+    uint16_t u16DeviceId, uint8_t u8Value, uint8_t u8InClusterCount, uint8_t u8OutClusterCount,
+    uint16_t au16Data[34]);
+void ZCB_HandleAttributeReport           (uint16_t u16ShortAddress, uint8_t u8EndPoint, uint16_t u16ClusterId, 
+                                          uint16_t u16AttributeId, uint8_t u8AttributeStatus, uint8_t u8AttributeType, 
+                                          uint16_t u16SizeOfAttributesInBytes, uint64_t u64Data);
+void ZCB_HandleReadAttrResp              (uint16_t u16ShortAddress, uint8_t u8EndPoint, uint16_t u16ClusterId, 
+                                          uint16_t u16AttributeId, uint8_t u8AttributeStatus, uint8_t u8AttributeType, 
+                                          uint16_t u16SizeOfAttributesInBytes, uint8_t     auAttributeValue[50]);
+void ZCB_HandleActiveEndPointResp        (uint16_t u16NwkAddrOfInterest, uint8_t u8ActiveEpCount, uint8_t* pu8ActiveEpList);
+void ZCB_HandleNetworkAddressReponse     (uint64_t u64IeeeAddrRemoteDev, uint16_t u16NwkAddrRemoteDev);
+void ZCB_HandleIeeeAddressReponse        (uint64_t u64IeeeAddrRemoteDev, uint16_t u16NwkAddrRemoteDev);
+
 
 teZcbStatus eZCB_Finish(void);
 bool EnumJoinedNodes(void);

@@ -95,8 +95,3 @@ CHIP_ERROR ActionsAttrAccess::Read(const ConcreteReadAttributePath & aPath, Attr
     return CHIP_NO_ERROR;
 }
 } // anonymous namespace
-
-void MatterActionsPluginServerInitCallback()
-{
-    AttributeAccessInterfaceRegistry::Instance().Register(&gAttrAccess);
-}

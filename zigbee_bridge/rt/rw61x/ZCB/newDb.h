@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 NXP
+ * Copyright 2021-2023, 2025 NXP
  * All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
@@ -64,6 +64,10 @@ typedef enum {
 #define LEN_ROOMNM      30
 #define LEN_SYSNM       20
 #define LEN_SYSSTR      20
+
+#ifdef CONFIG_NVS
+#define PDM_ID_APP_BRIDGE (0x20)
+#endif
 
 typedef struct newdb_system {
     int id;

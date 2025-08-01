@@ -122,7 +122,7 @@ DeviceDimmable::DeviceDimmable(const char * szDeviceName, std::string szLocation
 void DeviceOnOff::SetOnOffValue(bool OnOff)
 {
     ChipLogProgress(DeviceLayer, "OnOffDevice[%s]: New State=\"%d\"", mName, OnOff);
-
+    mOn = OnOff;
    // if (changed && mChanged_CB)
     if (mChanged_CB)
         mChanged_CB(this, kChanged_OnOff);
