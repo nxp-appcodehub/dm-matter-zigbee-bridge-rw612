@@ -43,6 +43,7 @@ Design infrastructure:
 ## 3. Setup<a name="step3"></a>
 1. Creating the build environment & setting up Matter environment:
    - All the information required to set up the environment, build the application, and test, are available in the [Matter Documentation for NXP MCU platforms](https://docs.mcuxpresso.nxp.com/matter/latest/html/index.html)
+   - In order to set up the environment, the local west.yml should be used to clone all the repos (west init -l [--mf FILE] directory OR  west init -m [https://github.com/nxp-appcodehub/dm-matter-zigbee-bridge-rw612.git](https://github.com/nxp-appcodehub/dm-matter-zigbee-bridge-rw612.git) sdk-next --mf west.yml --mr rw612_only)
 
 
 2. Build the FRDM-RW612 Matter-Zigbee bridge app
@@ -130,4 +131,5 @@ Questions regarding the content/correctness of this example can be entered as Is
 |:-------:|------------------------------------------------|----------------------------:|
 | 1.0     | Initial release on Application Code Hub        | November 14<sup>th</sup> 2024 |
 | 1.1     | Update to Matter 1.4                           | April 25<sup>th</sup> 2025  |
-| 2.0     | Added new version of Zigbee Matter bridge. Zigbee is running directly on RW612. Cluster management is achieved by registering specific CommandHandlers.                                           | September 25<sup>th</sup> 2025|
+| 2.0     | Added new version of Zigbee Matter bridge. Zigbee is running directly on RW612. Cluster management is achieved by registering specific CommandHandlers.                                           | September 25<sup>th</sup> 2025 |
+| 2.1     | Reference connectivity-addons                  | November 18<sup>th</sup> 2025  |

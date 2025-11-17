@@ -22,7 +22,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 if (DEFINED CHIP_ROOT)
     get_filename_component(CHIP_ROOT ${CHIP_ROOT} ABSOLUTE)
 else()
-    get_filename_component(CHIP_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../../../sdk-next/mcuxsdk/middleware/matter REALPATH)
+    get_filename_component(CHIP_ROOT ${SdkRootDirPath}/middleware/matter REALPATH)
 endif()
 
 # Export CHIP_ROOT as an environment variable to be recognized by Kconfig

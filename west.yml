@@ -1,0 +1,33 @@
+# The west manifest file (west.yml) for MCUXpresso SDK delivery.
+#
+# See the west documentation for more information:
+#
+# https://docs.zephyrproject.org/latest/guides/west/index.html
+manifest:
+  remotes:
+    - name: nxp
+      url-base: https://github.com/NXP
+    - name: nxp-zephyr
+      url-base: https://github.com/nxp-zephyr
+    - name: nxp-mcuxpresso
+      url-base: https://github.com/nxp-mcuxpresso
+  defaults:
+    remote: nxp-mcuxpresso
+  group-filter:
+    - -optional
+    - -bifrost
+    - -ble_cs_algo_private
+    - -bluetooth_private
+  projects:
+    - name: bifrost
+      path: bifrost
+      remote: nxp-zephyr
+      revision: main
+      west-commands: scripts/west_commands.yml
+      groups:
+        - bifrost
+    - name: mcuxsdk-manifests-connectivity-addons
+      repo-path: mcuxsdk-manifests-connectivity-addons
+      path: manifests-connectivity-addons
+      revision: release/v1.4.2
+      import: west.yml
